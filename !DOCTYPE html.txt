@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI TikTok Zoom Studio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #ff0050;
+            --secondary: #00f2ea;
+            --dark: #121212;
+            --light: #ffffff;
+            --gray: #f5f5f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: 2.8em;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: var(--dark);
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 1.2rem;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255,0,80,0.1);
+        }
+
+        .zoom-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .zoom-btn {
+            padding: 1rem;
+            background: white;
+            border: 2px solid var(--gray);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .zoom-btn:hover {
+            border-color: var(--primary);
+            background: rgba(255,0,80,0.05);
+        }
+
+        .zoom-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        button {
+            padding: 1.2rem 2rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255,0,80,0.2);
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .video-box {
+            background: black;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .video-label {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5em;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            color: white;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 10px;
+            background: #333;
+            border-radius: 10px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .error {
+            color: #ff3b30;
+            background: rgba(255,59,48,0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .zoom-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .video-container {
+                grid-template-columns: 1fr;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI TikTok Zoom Studio</h1>
+            <p class="subtitle">Tạo video zoom chuyên nghiệp từ link TikTok Shop</p>
+        </header>
+
+        <div class="main-card">
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="url" id="tiktokLink" placeholder="Dán link TikTok Shop của bạn (ví dụ: https://www.tiktok.com/shop/product/123)...">
+                    <button onclick="generateVideo()">Tạo Video</button>
+                </div>
+                <div id="error" class="error"></div>
+            </div>
+
+            <div class="zoom-controls">
+                <button class="zoom-btn active" data-zoom="in"><i class="fas fa-search-plus"></i> Zoom In</button>
+                <button class="zoom-btn" data-zoom="out"><i class="fas fa-search-minus"></i> Zoom Out</button>
+                <button class="zoom-btn" data-zoom="left"><i class="fas fa-arrow-left"></i> Zoom Trái</button>
+                <button class="zoom-btn" data-zoom="right"><i class="fas fa-arrow-right"></i> Zoom Phải</button>
+            </div>
+
+            <button id="generateBtn" onclick="generateVideo()" style="width: 100%;">Tạo Video Ngay</button>
+        </div>
+
+        <div class="video-container">
+            <div class="video-box">
+                <span class="video-label">Video Gốc</span>
+                <video id="originalVideo" controls></video>
+            </div>
+            <div class="video-box">
+                <span class="video-label">Video Đã Zoom</span>
+                <video id="processedVideo" controls></video>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <i class="fas fa-bolt feature-icon"></i>
+                <h3>Tốc Độ Nhanh</h3>
+                <p>Xử lý video trong vài giây với AI</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-magic feature-icon"></i>
+                <h3>Chất Lượng 4K</h3>
+                <p>Zoom mà không làm mờ hình ảnh</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-globe feature-icon"></i>
+                <h3>Đa Nền Tảng</h3>
+                <p>Tối ưu cho TikTok, Instagram, YouTube</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Đang xử lý video... <span id="progressText">0%</span></div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+    </div>
+
+    <script>
+        // Biến toàn cục
+        let selectedZoom = 'in';
+        const loading = document.getElementById('loading');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        const errorDiv = document.getElementById('error');
+
+        // Xử lý chọn zoom
+        document.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                selectedZoom = this.dataset.zoom;
+            });
+        });
+
+        // Giả lập quá trình xử lý
+        function simulateProcessing() {
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 8;
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    loading.style.display = 'none';
+                    
+                    // Hiển thị video mẫu
+                    document.getElementById('processedVideo').src = 
+                        "https://via.placeholder.com/720x1280/000000/ffffff?text=Video+Đã+Zoom+" + selectedZoom;
+                    document.getElementById('originalVideo').src = 
+                        "https://via.placeholder.com/720x1280/000000/ffffff?text=Video+Gốc";
+                }
+                progressText.textContent = Math.min(Math.round(progress), 100) + '%';
+                progressBar.style.width = Math.min(progress, 100) + '%';
+            }, 200);
+        }
+
+        // Kiểm tra URL TikTok
+        function isValidTikTokUrl(url) {
+            const pattern = /^(https?:\/\/)?(www\.)?tiktok\.com\/shop\/product\/.+/;
+            return pattern.test(url);
+        }
+
+        // Hàm chính
+        async function generateVideo() {
+            try {
+                const link = document.getElementById('tiktokLink').value.trim();
+                
+                // Xử lý lỗi
+                if(!link) {
+                    showError('Vui lòng nhập link TikTok Shop');
+                    return;
+                }
+                
+                if(!isValidTikTokUrl(link)) {
+                    showError('Link TikTok không hợp lệ');
+                    return;
+                }
+
+                // Hiển thị loading
+                errorDiv.style.display = 'none';
+                loading.style.display = 'flex';
+                progressText.textContent = '0%';
+                progressBar.style.width = '0%';
+
+                // Giả lập API call
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                simulateProcessing();
+                
+            } catch (error) {
+                showError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+                loading.style.display = 'none';
+            }
+        }
+
+        function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Khởi tạo video placeholder
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('originalVideo').src = 
+                "https://via.placeholder.com/720x1280/000000/ffffff?text=Video+Gốc";
+        });
+    </script>
+</body>
+</html>
